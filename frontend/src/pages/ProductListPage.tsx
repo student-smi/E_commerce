@@ -41,10 +41,16 @@ export function ProductListPage() {
   }
 
   async function handleAddToCart(productId: string) {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     try {
       await api.post('/cart/add', { productId, quantity: 1 });
-    } catch {
-      alert('Please log in to add items to cart');
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      showToast('Added to cart ✓');
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Could not add to cart');
     }
   }
 
@@ -53,6 +59,13 @@ export function ProductListPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Our Collection</h1>
+
+      {/* Toast notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium animate-fade-in">
+          {toastMsg}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">

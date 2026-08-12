@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProduct } from '../hooks/useProducts';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../store/authStore';
 import api from '../lib/api';
 
 function formatPrice(cents: number): string {
@@ -10,18 +12,29 @@ function formatPrice(cents: number): string {
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuthStore();
   const { data: product, isLoading, isError } = useProduct(id!);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   async function handleAddToCart() {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     setAdding(true);
     setMessage('');
     try {
       await api.post('/cart/add', { productId: id, quantity });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      setIsSuccess(true);
       setMessage('Added to cart!');
+      setTimeout(() => setMessage(''), 3000);
     } catch (err: any) {
+      setIsSuccess(false);
       setMessage(err.response?.data?.error || 'Could not add to cart');
     } finally {
       setAdding(false);
@@ -102,7 +115,7 @@ export function ProductDetailPage() {
           )}
 
           {message && (
-            <p className={`text-sm mb-4 ${message.includes('Added') ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm mb-4 ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>
               {message}
             </p>
           )}
