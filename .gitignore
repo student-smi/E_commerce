@@ -11,6 +11,11 @@ build/
 .env
 .env.local
 .env.*.local
+*.env
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
 
 # Database files
 *.db
