@@ -79,7 +79,7 @@ export async function runMigrations(): Promise<void> {
     });
   }
 
-  // ── Indexes (all IF NOT EXISTS — safe to re-run) ──────────────
+  // ── Indexes (IF NOT EXISTS — safe to re-run) ──────────────────
   await db.raw(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email         ON users(email)`);
   await db.raw(`CREATE INDEX        IF NOT EXISTS idx_products_category   ON products(category)`);
   await db.raw(`CREATE INDEX        IF NOT EXISTS idx_products_created_at ON products(created_at)`);

@@ -4,8 +4,11 @@ import { createProduct, updateProduct, deleteProduct } from '../controllers/prod
 import {
   listAllOrders,
   updateOrderStatus,
+  bulkUpdateOrders,
+  getOrderItems,
   listAllUsers,
   getUserDetail,
+  changeUserRole,
   getStats,
 } from '../controllers/admin';
 
@@ -24,10 +27,13 @@ router.delete('/products/:id', deleteProduct);
 
 // Order management
 router.get('/orders', listAllOrders);
+router.patch('/orders/bulk', bulkUpdateOrders);         // bulk must be before :id
 router.patch('/orders/:id', updateOrderStatus);
+router.get('/orders/:id/items', getOrderItems);
 
 // User management
 router.get('/users', listAllUsers);
 router.get('/users/:id', getUserDetail);
+router.patch('/users/:id/role', changeUserRole);
 
 export default router;

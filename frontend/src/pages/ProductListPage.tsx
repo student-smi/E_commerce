@@ -42,7 +42,8 @@ export function ProductListPage() {
 
   async function handleAddToCart(productId: string) {
     if (!isAuthenticated) {
-      navigate('/login');
+      showToast('🔒 Please login to add items to cart');
+      setTimeout(() => navigate('/login'), 1500);
       return;
     }
     try {

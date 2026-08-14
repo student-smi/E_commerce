@@ -27,8 +27,13 @@ api.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem('token');
-      // Only redirect if not already on auth pages
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+      const path = window.location.pathname;
+      // Only redirect if not already on auth/public pages
+      const isPublicPage =
+        path.startsWith('/login') ||
+        path.startsWith('/register') ||
+        path.startsWith('/products');
+      if (!isPublicPage) {
         window.location.href = '/login';
       }
     }

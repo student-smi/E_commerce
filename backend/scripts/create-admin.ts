@@ -1,55 +1,54 @@
 /**
- * One-time script: creates an admin user in dev.db
- * Run with: npx ts-node scripts/create-admin.ts
+ * Run this script to create an admin user:
+ * npx ts-node scripts/create-admin.ts
  */
-import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
-import knex from 'knex';
-import path from 'path';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
-const db = knex({
-  client: 'sqlite3',
-  connection: { filename: process.env.DATABASE_URL || path.resolve('./dev.db') },
-  useNullAsDefault: true,
-});
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import db from '../src/lib/db';
 
-async function main() {
-  const email    = 'admin@store.com';
+async function createAdmin() {
+  const email = 'admin@ecommerce.com';
   const password = 'Admin@1234';
-  const name     = 'Admin';
-
-  // Ensure users table exists
-  const hasTable = await db.schema.hasTable('users');
-  if (!hasTable) {
-    console.error('users table not found — run the backend server first to run migrations.');
-    process.exit(1);
-  }
+  const name = 'Super Admin';
 
   const existing = await db('users').where({ email }).first();
   if (existing) {
-    console.log(`Admin already exists: ${email}`);
+    // Already exists — just promote to admin
+    await db('users').where({ email }).update({ role: 'admin' });
+    console.log(`✅ User "${email}" promoted to admin.`);
     await db.destroy();
     return;
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const now = new Date().toISOString();
   await db('users').insert({
-    id:            uuidv4(),
+    id: uuidv4(),
     name,
     email,
     password_hash: passwordHash,
-    role:          'admin',
-    created_at:    new Date().toISOString(),
-    updated_at:    new Date().toISOString(),
+    role: 'admin',
+    created_at: now,
+    updated_at: now,
   });
 
-  console.log('✅ Admin user created successfully');
-  console.log(`   Email   : ${email}`);
-  console.log(`   Password: ${password}`);
+  console.log('');
+  console.log('✅ Admin user created!');
+  console.log('─────────────────────────────');
+  console.log(`📧 Email:    ${email}`);
+  console.log(`🔑 Password: ${password}`);
+  console.log(`🌐 URL:      http://localhost:5173/login`);
+  console.log('─────────────────────────────');
+  console.log('After login, go to /admin for the admin panel.');
+  console.log('');
+
   await db.destroy();
 }
 
-main().catch((err) => { console.error(err); process.exit(1); });
+createAdmin().catch((err) => {
+  console.error('Failed to create admin:', err);
+  process.exit(1);
+});

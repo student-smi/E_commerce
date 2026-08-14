@@ -3,15 +3,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbPath =
+const connectionString =
   process.env.TEST_DATABASE_URL ||
-  process.env.DATABASE_URL ||
-  './dev.db';
+  process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
 
 const db = knex({
-  client: 'sqlite3',
-  connection: { filename: dbPath },
-  useNullAsDefault: true,
+  client: 'pg',
+  connection: {
+    connectionString,
+    ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+  },
+  pool: { min: 2, max: 10 },
 });
 
 export default db;
