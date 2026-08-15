@@ -116,12 +116,12 @@ export function ProductDetailPage() {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 sm:gap-10 items-start">
-        {/* Product Image — shorter on mobile, sticky only on desktop */}
-        <div className="aspect-[3/2] sm:aspect-[4/5] bg-gray-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-gray-100 mb-5 sm:mb-0 md:sticky md:top-20">
+        {/* Product Image — object-contain so image is never cut on mobile or desktop */}
+        <div className="w-full aspect-square sm:aspect-[4/5] max-h-[360px] sm:max-h-[500px] bg-gray-50/90 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-gray-100 mb-5 sm:mb-0 md:sticky md:top-20 flex items-center justify-center p-3 sm:p-6">
           <img
             src={product.imageUrl || 'https://via.placeholder.com/600x750?text=No+Image'}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
 
