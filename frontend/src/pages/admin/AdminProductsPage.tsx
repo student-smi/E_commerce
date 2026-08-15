@@ -85,15 +85,20 @@ export function AdminProductsPage() {
     }
   }
 
+  const [deleting, setDeleting] = useState(false);
+
   async function handleDelete(id: string) {
+    setDeleting(true);
     try {
       await api.delete(`/admin/products/${id}`);
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       setDeleteId(null);
-    } catch {
-      alert('Delete failed');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to delete product');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -366,10 +371,11 @@ export function AdminProductsPage() {
                 Cancel
               </button>
               <button
+                disabled={deleting}
                 onClick={() => handleDelete(deleteId)}
-                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700"
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 disabled:opacity-50"
               >
-                Delete
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

@@ -105,14 +105,30 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
 
 // ── DELETE /api/admin/products/:id ────────────────────────────
 export async function deleteProduct(req: Request, res: Response): Promise<void> {
-  const product = await db('products').where({ id: req.params.id }).first();
-  if (!product) {
-    res.status(404).json({ error: 'Product not found' });
-    return;
-  }
+  try {
+    const product = await db('products').where({ id: req.params.id }).first();
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
 
-  await db('products').where({ id: req.params.id }).delete();
-  res.json({ message: 'Product deleted' });
+    // Check if the product has been purchased in any past orders
+    const existingOrderItem = await db('order_items').where({ product_id: req.params.id }).first();
+    if (existingOrderItem) {
+      res.status(400).json({
+        error: 'Yeh product past customer orders se juda hua hai, isliye ise direct delete nahi kiya ja sakta. Aap iska stock 0 kar sakte hain.',
+      });
+      return;
+    }
+
+    // Remove from active shopping carts first
+    await db('cart_items').where({ product_id: req.params.id }).delete();
+    await db('products').where({ id: req.params.id }).delete();
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to delete product' });
+  }
 }
 
 // ── DTO mapper ────────────────────────────────────────────────
