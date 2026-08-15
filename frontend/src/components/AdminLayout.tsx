@@ -32,7 +32,7 @@ export function AdminLayout() {
             <span className="text-2xl">⚡</span>
             <div>
               <p className="text-white font-bold text-sm tracking-wide">Admin Panel</p>
-              <p className="text-purple-300 text-xs">eCommerce AI</p>
+             
             </div>
           </div>
         </div>
