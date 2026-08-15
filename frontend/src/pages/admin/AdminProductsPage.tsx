@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import api from '../../lib/api';
 import { Product } from '../../hooks/useProducts';
 
@@ -17,16 +18,19 @@ const CATEGORIES = ['All', 'T-Shirts', 'Jeans', 'Dresses', 'Jackets', 'Sneakers'
 const CATEGORY_OPTIONS = ['T-Shirts', 'Jeans', 'Dresses', 'Jackets', 'Sneakers'];
 
 function fmt(cents: number) { return `₹${(cents / 100).toFixed(0)}`; }
+function formatUSD(cents: number) { return `$${(cents / 100).toFixed(2)}`; }
 
 export function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-products'],
@@ -85,8 +89,6 @@ export function AdminProductsPage() {
     }
   }
 
-  const [deleting, setDeleting] = useState(false);
-
   async function handleDelete(id: string) {
     setDeleting(true);
     try {
@@ -108,7 +110,7 @@ export function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Product Catalog</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage items, stock counts, and categories</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage items, stock counts, view details, and edit inventory</p>
         </div>
         <button
           onClick={openCreate}
@@ -151,11 +153,11 @@ export function AdminProductsPage() {
         <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
           {/* Desktop Table Header */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-            <div className="col-span-5">Product</div>
+            <div className="col-span-4">Product</div>
             <div className="col-span-2">Category</div>
             <div className="col-span-2">Price</div>
             <div className="col-span-1">Stock</div>
-            <div className="col-span-2 text-right">Actions</div>
+            <div className="col-span-3 text-right">Actions</div>
           </div>
 
           {/* List Items */}
@@ -164,12 +166,21 @@ export function AdminProductsPage() {
               <div key={p.id} className="transition-colors hover:bg-gray-50/60">
                 {/* Desktop View */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 items-center text-sm">
-                  <div className="col-span-5 flex items-center gap-3">
-                    <div className="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                  <div className="col-span-4 flex items-center gap-3">
+                    <div
+                      onClick={() => setViewProduct(p)}
+                      className="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      title="Click to view details"
+                    >
                       <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-gray-900 truncate">{p.name}</p>
+                      <p
+                        onClick={() => setViewProduct(p)}
+                        className="font-bold text-gray-900 truncate cursor-pointer hover:text-indigo-600 hover:underline transition-colors"
+                      >
+                        {p.name}
+                      </p>
                       <p className="text-xs text-gray-400 truncate">{p.description}</p>
                     </div>
                   </div>
@@ -188,30 +199,48 @@ export function AdminProductsPage() {
                       {p.stock}
                     </span>
                   </div>
-                  <div className="col-span-2 flex items-center justify-end gap-2">
+                  <div className="col-span-3 flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => setViewProduct(p)}
+                      className="text-xs font-semibold text-gray-700 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                      title="View product details"
+                    >
+                      <span>👁️</span>
+                      <span>View</span>
+                    </button>
                     <button
                       onClick={() => openEdit(p)}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-xl transition-colors"
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
                     >
-                      Edit
+                      <span>✏️</span>
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => setDeleteId(p.id)}
-                      className="text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 px-2.5 py-1.5 rounded-xl transition-colors"
+                      className="text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 px-2 py-1.5 rounded-xl transition-colors"
+                      title="Delete product"
                     >
-                      Delete
+                      🗑
                     </button>
                   </div>
                 </div>
 
                 {/* Mobile View */}
                 <div className="md:hidden p-4 flex gap-3 items-center">
-                  <div className="w-14 h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+                  <div
+                    onClick={() => setViewProduct(p)}
+                    className="w-14 h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0 cursor-pointer"
+                  >
                     <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-gray-900 truncate">{p.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <p
+                      onClick={() => setViewProduct(p)}
+                      className="font-bold text-sm text-gray-900 truncate cursor-pointer hover:underline"
+                    >
+                      {p.name}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <span className="text-xs font-bold text-gray-900">{fmt(p.price)}</span>
                       <span className="text-[10px] text-gray-400">•</span>
                       <span className="text-[11px] text-gray-500 font-medium">{p.category}</span>
@@ -224,15 +253,23 @@ export function AdminProductsPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5 shrink-0">
-                    <button
-                      onClick={() => openEdit(p)}
-                      className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-xl"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setViewProduct(p)}
+                        className="text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1.5 rounded-xl"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => openEdit(p)}
+                        className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-xl"
+                      >
+                        Edit
+                      </button>
+                    </div>
                     <button
                       onClick={() => setDeleteId(p.id)}
-                      className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-xl"
+                      className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-xl w-full text-center"
                     >
                       Delete
                     </button>
@@ -240,6 +277,118 @@ export function AdminProductsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── View Product Quick Inspection Modal ── */}
+      {viewProduct && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">👁️</span>
+                <h2 className="text-lg font-bold text-gray-900">Product Inspection</h2>
+              </div>
+              <button
+                onClick={() => setViewProduct(null)}
+                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Product Body */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+              {/* Image Preview */}
+              <div className="aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 shadow-2xs">
+                <img
+                  src={viewProduct.imageUrl || 'https://via.placeholder.com/400x500?text=No+Image'}
+                  alt={viewProduct.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Specs & Pricing */}
+              <div className="space-y-3.5">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                    {viewProduct.category}
+                  </span>
+                  <h3 className="text-xl font-extrabold text-gray-900 mt-2 leading-tight">
+                    {viewProduct.name}
+                  </h3>
+                </div>
+
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-gray-900">{fmt(viewProduct.price)}</span>
+                  <span className="text-xs text-gray-400">({formatUSD(viewProduct.price)})</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Inventory:</span>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                    viewProduct.stock === 0
+                      ? 'bg-red-100 text-red-700'
+                      : viewProduct.stock < 10
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {viewProduct.stock === 0 ? 'Out of Stock' : `${viewProduct.stock} units in stock`}
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Description</p>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-xl">
+                    {viewProduct.description || 'No description provided.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Metadata ID & Timestamps */}
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+              <div>
+                <span className="text-gray-400 block font-medium">Product ID</span>
+                <span className="font-mono text-gray-800 truncate block font-bold text-[11px]">{viewProduct.id}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 block font-medium">Added Date</span>
+                <span className="text-gray-800 font-semibold">{new Date(viewProduct.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+              <Link
+                to={`/products/${viewProduct.id}`}
+                target="_blank"
+                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-2xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center gap-1.5"
+              >
+                <span>Storefront View</span>
+                <span>↗</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  const toEdit = viewProduct;
+                  setViewProduct(null);
+                  openEdit(toEdit);
+                }}
+                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+              >
+                <span>✏️ Edit Item</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewProduct(null)}
+                className="py-3 px-5 border border-gray-300 rounded-2xl text-xs sm:text-sm font-semibold hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
