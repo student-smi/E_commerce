@@ -36,88 +36,134 @@ export function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center py-28 gap-3">
+        <div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500 font-medium">Loading your shopping cart...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-8 tracking-tight">
+        Shopping Cart ({items.length})
+      </h1>
 
       {items.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-4">🛍️</p>
-          <p className="text-lg font-medium mb-4">Your cart is empty</p>
+        <div className="text-center py-20 bg-gray-50 rounded-3xl p-8 border border-gray-100">
+          <span className="text-6xl mb-4 block">🛍️</span>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
+          <p className="text-gray-500 text-sm sm:text-base mb-6 max-w-sm mx-auto">
+            You don't have any items in your cart. Explore our collection and add your favorite picks!
+          </p>
           <button
             onClick={() => navigate('/products')}
-            className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors"
+            className="bg-black text-white px-8 py-3.5 rounded-2xl font-semibold hover:bg-gray-800 active:scale-95 transition-all shadow-md"
           >
-            Shop Now
+            Start Shopping
           </button>
         </div>
       ) : (
-        <>
-          <ul className="divide-y divide-gray-200 mb-8">
-            {items.map((item) => (
-              <li key={item.productId} className="flex gap-6 py-6">
-                <img
-                  src={item.imageUrl || 'https://via.placeholder.com/100x120?text=Item'}
-                  alt={item.name}
-                  className="w-24 h-28 object-cover rounded-xl bg-gray-100 flex-shrink-0"
-                />
-                <div className="flex flex-col flex-1">
-                  <p className="font-semibold text-gray-900 text-lg">{item.name}</p>
-                  <p className="text-gray-500 text-sm mb-auto">{item.category}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center border border-gray-300 rounded-lg">
-                      <button
-                        onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-40"
-                      >
-                        −
-                      </button>
-                      <span className="px-4 py-2 font-medium">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                        disabled={item.quantity >= item.stock}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-40"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-lg font-bold text-gray-900">
-                        {formatPrice(item.price * item.quantity)}
-                      </span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Cart Items List */}
+          <div className="lg:col-span-2 space-y-4">
+            <ul className="divide-y divide-gray-100 bg-white rounded-3xl border border-gray-100 shadow-xs px-4 sm:px-6">
+              {items.map((item) => (
+                <li key={item.productId} className="py-4 sm:py-6 flex gap-3 sm:gap-6 items-center">
+                  <img
+                    src={item.imageUrl || 'https://via.placeholder.com/100x120?text=Item'}
+                    alt={item.name}
+                    className="w-20 h-24 sm:w-24 sm:h-28 object-cover rounded-2xl bg-gray-100 shrink-0"
+                  />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm sm:text-lg truncate">{item.name}</p>
+                        <span className="text-xs text-gray-400 font-medium">{item.category}</span>
+                      </div>
                       <button
                         onClick={() => handleRemove(item.productId)}
-                        className="text-gray-400 hover:text-red-500 text-sm"
+                        className="text-gray-400 hover:text-red-600 p-1 rounded-lg"
+                        aria-label="Remove item"
                       >
-                        Remove
+                        ✕
                       </button>
                     </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
 
-          <div className="bg-gray-50 rounded-2xl p-6">
-            <div className="flex justify-between text-xl font-bold text-gray-900 mb-4">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
+                    <div className="flex items-center justify-between mt-4">
+                      {/* Quantity Selector */}
+                      <div className="flex items-center border border-gray-200 rounded-xl bg-gray-50/50">
+                        <button
+                          onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          className="w-8 h-8 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-200/60 rounded-l-xl disabled:opacity-30 active:scale-95 text-sm"
+                        >
+                          −
+                        </button>
+                        <span className="w-8 text-center text-xs sm:text-sm font-bold text-gray-900">{item.quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock}
+                          className="w-8 h-8 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-200/60 rounded-r-xl disabled:opacity-30 active:scale-95 text-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Total for item */}
+                      <div className="text-right">
+                        <p className="text-sm sm:text-lg font-bold text-gray-900">
+                          {formatPrice(item.price * item.quantity)}
+                        </p>
+                        {item.quantity > 1 && (
+                          <p className="text-[11px] text-gray-400">
+                            {formatPrice(item.price)} each
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Order Summary Sidebar */}
+          <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200/60 sticky top-24">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+
+            <div className="space-y-3 border-b border-gray-200 pb-4 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
+                <span className="font-semibold text-gray-900">{formatPrice(total)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span className="text-emerald-600 font-semibold">FREE</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Estimated Tax</span>
+                <span className="text-gray-500">Calculated at checkout</span>
+              </div>
             </div>
+
+            <div className="flex justify-between items-baseline text-lg font-extrabold text-gray-900 my-4">
+              <span>Total</span>
+              <span className="text-2xl font-black">{formatPrice(total)}</span>
+            </div>
+
             <button
               onClick={() => navigate('/checkout')}
-              className="w-full bg-black text-white py-4 rounded-xl font-medium text-lg hover:bg-gray-800 transition-colors"
+              className="w-full bg-black text-white py-4 rounded-2xl font-bold text-base hover:bg-gray-800 active:scale-[0.99] transition-all shadow-md"
             >
-              Proceed to Checkout
+              Proceed to Checkout →
             </button>
+
+            <p className="text-center text-xs text-gray-400 mt-3">
+              🔒 Safe & Secure 256-Bit Encrypted Checkout
+            </p>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

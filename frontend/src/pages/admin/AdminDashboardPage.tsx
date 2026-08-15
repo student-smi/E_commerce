@@ -28,19 +28,19 @@ function fmt(cents: number) {
 function KPICard({ title, value, icon, color, sub }: { title: string; value: string; icon: string; color: string; sub?: string }) {
   return (
     <div
-      className="rounded-2xl p-5 shadow-sm flex items-start gap-4"
-      style={{ background: 'white', borderTop: `4px solid ${color}` }}
+      className="rounded-2xl p-4 sm:p-5 shadow-xs flex items-start gap-3.5 bg-white border border-gray-100 transition-all hover:shadow-md"
+      style={{ borderTop: `4px solid ${color}` }}
     >
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl shrink-0"
         style={{ background: color + '18' }}
       >
         {icon}
       </div>
-      <div>
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider truncate">{title}</p>
+        <p className="text-xl sm:text-2xl font-black text-gray-900 mt-0.5">{value}</p>
+        {sub && <p className="text-[11px] text-gray-400 mt-0.5 truncate">{sub}</p>}
       </div>
     </div>
   );
@@ -59,16 +59,16 @@ function RevenueBarChart({ data }: { data: { day: string; revenue: number }[] })
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="flex items-end gap-2 h-40 mt-2">
+    <div className="flex items-end gap-1.5 sm:gap-2 h-40 mt-2">
       {data.map((d, i) => {
-        const h = Math.max(4, (d.revenue / max) * 140);
+        const h = Math.max(6, (d.revenue / max) * 140);
         const date = new Date(d.day);
         const label = days[date.getDay()] || d.day.slice(5);
         return (
           <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
             <div className="relative w-full">
               {/* Tooltip */}
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                 {fmt(d.revenue)}
               </div>
               <div
@@ -80,7 +80,7 @@ function RevenueBarChart({ data }: { data: { day: string; revenue: number }[] })
                 }}
               />
             </div>
-            <span className="text-[10px] text-gray-400">{label}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{label}</span>
           </div>
         );
       })}
@@ -98,38 +98,46 @@ function DonutChart({ data }: { data: Record<string, number> }) {
   const circ = 2 * Math.PI * r;
 
   const slices = entries.map(([status, count]) => {
-    const pct = count / total;
-    const dash = pct * circ;
-    const gap = circ - dash;
-    const slice = { status, count, dash, gap, offset, color: STATUS_COLORS[status] || '#94a3b8' };
-    offset += dash;
-    return slice;
+    const fraction = count / total;
+    const strokeDash = fraction * circ;
+    const strokeDashoffset = -offset;
+    offset += strokeDash;
+    return {
+      status,
+      count,
+      color: STATUS_COLORS[status] || '#94a3b8',
+      strokeDash: `${strokeDash} ${circ - strokeDash}`,
+      strokeDashoffset,
+    };
   });
 
   return (
-    <div className="flex items-center gap-4">
-      <svg width="100" height="100" viewBox="0 0 100 100" className="shrink-0">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#f1f5f9" strokeWidth="14" />
-        {slices.map((s, i) => (
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 justify-center">
+      <svg className="w-28 h-28 shrink-0 -rotate-90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r={r} fill="transparent" stroke="#f1f5f9" strokeWidth="16" />
+        {slices.map((s) => (
           <circle
-            key={i}
-            cx="50" cy="50" r={r}
-            fill="none"
+            key={s.status}
+            cx="50"
+            cy="50"
+            r={r}
+            fill="transparent"
             stroke={s.color}
-            strokeWidth="14"
-            strokeDasharray={`${s.dash} ${s.gap}`}
-            strokeDashoffset={-s.offset}
-            transform="rotate(-90 50 50)"
+            strokeWidth="16"
+            strokeDasharray={s.strokeDash}
+            strokeDashoffset={s.strokeDashoffset}
           />
         ))}
-        <text x="50" y="54" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#1e293b">{total}</text>
       </svg>
-      <div className="space-y-1.5">
-        {slices.map((s) => (
-          <div key={s.status} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-            <span className="text-xs text-gray-600 capitalize">{s.status}</span>
-            <span className="text-xs font-semibold text-gray-900 ml-auto pl-2">{s.count}</span>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full sm:w-auto">
+        {entries.map(([status, count]) => (
+          <div key={status} className="flex items-center gap-2 text-xs">
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ background: STATUS_COLORS[status] || '#94a3b8' }}
+            />
+            <span className="text-gray-600 capitalize">{status}:</span>
+            <span className="font-bold text-gray-900">{count}</span>
           </div>
         ))}
       </div>
@@ -137,133 +145,174 @@ function DonutChart({ data }: { data: Record<string, number> }) {
   );
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  pending:   'bg-amber-100 text-amber-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  shipped:   'bg-purple-100 text-purple-700',
-  delivered: 'bg-emerald-100 text-emerald-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
-
 export function AdminDashboardPage() {
-  const { data: stats, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<Stats>({
     queryKey: ['admin-stats'],
     queryFn: () => api.get<Stats>('/admin/stats').then((r) => r.data),
-    refetchInterval: 30_000,
+    refetchInterval: 30000,
   });
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center py-28 gap-3">
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500 font-medium">Loading analytics dashboard...</p>
       </div>
     );
   }
 
+  const stats = data || {
+    totalRevenue: 0,
+    pendingOrderCount: 0,
+    totalUsers: 0,
+    totalProducts: 0,
+    revenueByDay: [],
+    topProducts: [],
+    recentOrders: [],
+    lowStock: [],
+    statusBreakdown: {},
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-5 sm:space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Welcome back! Here's what's happening.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Overview</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">Real-time metrics, order fulfillment, and sales insights</p>
       </div>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <KPICard title="Total Revenue" icon="💰" color="#10b981" value={fmt(stats?.totalRevenue || 0)} sub="Confirmed + Delivered" />
-        <KPICard title="Pending Orders" icon="⏳" color="#f59e0b" value={String(stats?.pendingOrderCount || 0)} sub="Awaiting processing" />
-        <KPICard title="Total Users" icon="👥" color="#3b82f6" value={String(stats?.totalUsers || 0)} sub="Registered accounts" />
-        <KPICard title="Total Products" icon="👕" color="#8b5cf6" value={String(stats?.totalProducts || 0)} sub="In catalog" />
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <KPICard
+          title="Total Revenue"
+          value={fmt(stats.totalRevenue)}
+          icon="💰"
+          color="#6366f1"
+          sub="Delivered & confirmed orders"
+        />
+        <KPICard
+          title="Pending Orders"
+          value={String(stats.pendingOrderCount)}
+          icon="⏳"
+          color="#f59e0b"
+          sub="Requires fulfillment"
+        />
+        <KPICard
+          title="Total Customers"
+          value={String(stats.totalUsers)}
+          icon="👥"
+          color="#10b981"
+          sub="Registered accounts"
+        />
+        <KPICard
+          title="Catalog Size"
+          value={String(stats.totalProducts)}
+          icon="👕"
+          color="#ec4899"
+          sub="Active products"
+        />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-5">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-semibold text-gray-800">Revenue (Last 7 Days)</h2>
-            <span className="text-xs text-indigo-500 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">7d</span>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Revenue 7-day Bar Chart */}
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900">Revenue (Last 7 Days)</h2>
+              <p className="text-xs text-gray-400">Daily breakdown of confirmed purchases</p>
+            </div>
+            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+              Sales Trend
+            </span>
           </div>
-          <p className="text-xs text-gray-400 mb-3">Daily revenue from confirmed orders</p>
-          <RevenueBarChart data={stats?.revenueByDay || []} />
+          <RevenueBarChart data={stats.revenueByDay} />
         </div>
 
-        {/* Status Donut */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h2 className="font-semibold text-gray-800 mb-1">Order Status</h2>
-          <p className="text-xs text-gray-400 mb-4">Breakdown of all orders</p>
-          <DonutChart data={stats?.statusBreakdown || {}} />
+        {/* Order Status Breakdown */}
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-1">Order Statuses</h2>
+            <p className="text-xs text-gray-400 mb-4">All-time order fulfillment state</p>
+          </div>
+          <DonutChart data={stats.statusBreakdown} />
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-5">
-          <h2 className="font-semibold text-gray-800 mb-4">Recent Orders</h2>
-          <div className="space-y-3">
-            {(stats?.recentOrders || []).length === 0 && (
-              <p className="text-sm text-gray-400">No orders yet</p>
-            )}
-            {(stats?.recentOrders || []).map((o) => (
-              <div key={o.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {o.user.name?.[0]?.toUpperCase() || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{o.user.name}</p>
-                  <p className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString('en-IN')}</p>
-                </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_BADGE[o.status] || 'bg-gray-100 text-gray-600'}`}>
-                  {o.status}
-                </span>
-                <span className="text-sm font-bold text-gray-900 shrink-0">{fmt(o.totalAmount)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Tables Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Top 5 Products by Revenue */}
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100">
+          <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-1">Top Selling Items</h2>
+          <p className="text-xs text-gray-400 mb-4">Ranked by total earned revenue</p>
 
-        {/* Side column */}
-        <div className="space-y-4">
-          {/* Top Products */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
-            <h2 className="font-semibold text-gray-800 mb-3">Top Products</h2>
+          {stats.topProducts.length === 0 ? (
+            <p className="text-sm text-gray-400 py-6 text-center">No sales yet</p>
+          ) : (
             <div className="space-y-3">
-              {(stats?.topProducts || []).length === 0 && (
-                <p className="text-sm text-gray-400">No sales yet</p>
-              )}
-              {(stats?.topProducts || []).map((p, i) => (
-                <div key={p.id} className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-300 w-4">#{i + 1}</span>
-                  <div className="w-8 h-10 rounded bg-gray-100 overflow-hidden shrink-0">
-                    <img src={p.imageUrl || ''} alt={p.name} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              {stats.topProducts.map((p, idx) => (
+                <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                  <span className="w-5 text-center text-xs font-bold text-gray-400">#{idx + 1}</span>
+                  <div className="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                    <img
+                      src={p.imageUrl || 'https://via.placeholder.com/80x100?text=Item'}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-800 truncate">{p.name}</p>
-                    <p className="text-[10px] text-gray-400">{p.units} sold</p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{p.name}</p>
+                    <p className="text-[11px] text-gray-400">{p.units} units sold</p>
                   </div>
-                  <span className="text-xs font-bold text-emerald-600">{fmt(p.revenue)}</span>
+                  <div className="text-right">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900">{fmt(p.revenue)}</p>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Low Stock Alert */}
-          {(stats?.lowStock || []).length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm p-5 border-l-4 border-red-400">
-              <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <span>⚠️</span> Low Stock Alert
-              </h2>
-              <div className="space-y-2">
-                {(stats?.lowStock || []).map((p) => (
-                  <div key={p.id} className="flex items-center justify-between">
-                    <p className="text-xs text-gray-700 truncate flex-1">{p.name}</p>
-                    <span className={`text-xs font-bold ml-2 px-1.5 py-0.5 rounded ${p.stock === 0 ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
-                      {p.stock === 0 ? 'OUT' : `${p.stock} left`}
+        {/* Low Stock Alerts */}
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm sm:text-base font-bold text-gray-900">Low Stock Inventory</h2>
+            {stats.lowStock.length > 0 && (
+              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                {stats.lowStock.length} items critical
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mb-4">Products with stock under 10 units</p>
+
+          {stats.lowStock.length === 0 ? (
+            <div className="py-8 text-center text-emerald-600 text-sm font-medium">
+              ✓ All inventory levels are healthy!
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {stats.lowStock.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-amber-50/40 border border-amber-100">
+                  <div className="w-10 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                    <img
+                      src={p.imageUrl || 'https://via.placeholder.com/80x100?text=Item'}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{p.name}</p>
+                    <span className="text-[10px] text-gray-500 font-medium">{p.category}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs font-black px-2 py-1 rounded-md ${
+                      p.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {p.stock === 0 ? 'Out of stock' : `${p.stock} left`}
                     </span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

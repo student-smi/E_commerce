@@ -45,18 +45,24 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center py-28 gap-3">
+        <div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500 font-medium">Loading product details...</p>
       </div>
     );
   }
 
   if (isError || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <p className="text-xl text-gray-600 mb-4">Product not found.</p>
-        <button onClick={() => navigate('/products')} className="text-black underline">
-          Back to products
+      <div className="max-w-5xl mx-auto px-4 py-20 text-center">
+        <span className="text-5xl mb-4 block">🔍</span>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+        <p className="text-gray-500 mb-6">This item may have been removed or does not exist.</p>
+        <button
+          onClick={() => navigate('/products')}
+          className="bg-black text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors"
+        >
+          ← Back to Catalog
         </button>
       </div>
     );
@@ -65,17 +71,19 @@ export function ProductDetailPage() {
   const outOfStock = product.stock === 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      {/* Breadcrumb Back link */}
       <button
         onClick={() => navigate('/products')}
-        className="text-sm text-gray-500 hover:text-black mb-6 flex items-center gap-1"
+        className="text-xs sm:text-sm text-gray-500 hover:text-black mb-4 sm:mb-6 inline-flex items-center gap-1.5 font-medium transition-colors"
       >
-        ← Back to products
+        <span>←</span>
+        <span>Back to Products</span>
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Image */}
-        <div className="aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 items-start">
+        {/* Product Image */}
+        <div className="aspect-[4/5] bg-gray-100 rounded-3xl overflow-hidden shadow-xs border border-gray-100 sticky top-20">
           <img
             src={product.imageUrl || 'https://via.placeholder.com/600x750?text=No+Image'}
             alt={product.name}
@@ -83,51 +91,97 @@ export function ProductDetailPage() {
           />
         </div>
 
-        {/* Details */}
+        {/* Product Details & Actions */}
         <div className="flex flex-col">
-          <span className="text-sm text-gray-500 uppercase tracking-wide mb-2">{product.category}</span>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-          <p className="text-2xl font-semibold text-gray-800 mb-4">{formatPrice(product.price)}</p>
-          <p className="text-gray-600 mb-6 leading-relaxed">{product.description}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold text-black uppercase tracking-wider bg-gray-100 px-3 py-1 rounded-full">
+              {product.category}
+            </span>
+            {outOfStock ? (
+              <span className="text-xs font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                Out of Stock
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                ✓ In Stock ({product.stock} left)
+              </span>
+            )}
+          </div>
 
-          {outOfStock ? (
-            <p className="text-red-500 font-semibold mb-4">Out of Stock</p>
-          ) : (
-            <>
-              <p className="text-sm text-gray-500 mb-4">{product.stock} in stock</p>
-              <div className="flex items-center gap-4 mb-6">
-                <label className="text-sm font-medium text-gray-700">Quantity</label>
-                <div className="flex items-center border border-gray-300 rounded-lg">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
+            {product.name}
+          </h1>
+
+          <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            {formatPrice(product.price)}
+          </p>
+
+          <div className="border-t border-b border-gray-100 py-4 mb-6">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h3>
+            <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+              {product.description || 'No description provided for this product.'}
+            </p>
+          </div>
+
+          {!outOfStock && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-gray-900">Quantity</label>
+                <div className="flex items-center border border-gray-300 rounded-2xl bg-white shadow-2xs">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="px-3 py-2 text-lg hover:bg-gray-100"
+                    disabled={quantity <= 1}
+                    className="w-10 h-10 flex items-center justify-center text-lg font-bold text-gray-600 hover:bg-gray-100 rounded-l-2xl disabled:opacity-30 active:scale-95"
+                    aria-label="Decrease quantity"
                   >
                     −
                   </button>
-                  <span className="px-4 py-2 text-sm font-medium">{quantity}</span>
+                  <span className="w-12 text-center text-sm sm:text-base font-bold text-gray-900">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                    className="px-3 py-2 text-lg hover:bg-gray-100"
+                    disabled={quantity >= product.stock}
+                    className="w-10 h-10 flex items-center justify-center text-lg font-bold text-gray-600 hover:bg-gray-100 rounded-r-2xl disabled:opacity-30 active:scale-95"
+                    aria-label="Increase quantity"
                   >
                     +
                   </button>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {message && (
-            <p className={`text-sm mb-4 ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>
-              {message}
-            </p>
+            <div
+              className={`p-3.5 rounded-xl text-sm font-medium mb-4 flex items-center gap-2 ${
+                isSuccess ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+              }`}
+            >
+              <span>{isSuccess ? '✓' : '⚠️'}</span>
+              <span>{message}</span>
+            </div>
           )}
 
           <button
             onClick={handleAddToCart}
             disabled={outOfStock || adding}
-            className="w-full bg-black text-white py-4 rounded-xl font-medium text-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            className="w-full bg-black text-white py-4 rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-800 active:scale-[0.99] disabled:opacity-40 transition-all shadow-md flex items-center justify-center gap-2"
           >
-            {adding ? 'Adding…' : outOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {adding ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adding to Cart...</span>
+              </>
+            ) : outOfStock ? (
+              <span>Out of Stock</span>
+            ) : (
+              <>
+                <span>🛍️ Add to Cart</span>
+                <span>•</span>
+                <span>{formatPrice(product.price * quantity)}</span>
+              </>
+            )}
           </button>
         </div>
       </div>
