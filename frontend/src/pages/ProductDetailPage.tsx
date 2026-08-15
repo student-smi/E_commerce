@@ -116,12 +116,12 @@ export function ProductDetailPage() {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 sm:gap-10 items-start">
-        {/* Product Image — object-contain so image is never cut on mobile or desktop */}
-        <div className="w-full aspect-square sm:aspect-[4/5] max-h-[360px] sm:max-h-[500px] bg-gray-50/90 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-gray-100 mb-5 sm:mb-0 md:sticky md:top-20 flex items-center justify-center p-3 sm:p-6">
+        {/* Product Image — full image always 100% visible, no crop on any device */}
+        <div className="w-full bg-gray-50/70 rounded-2xl sm:rounded-3xl border border-gray-100 mb-5 sm:mb-0 md:sticky md:top-20 flex items-center justify-center p-3 sm:p-6 shadow-xs">
           <img
             src={product.imageUrl || 'https://via.placeholder.com/600x750?text=No+Image'}
             alt={product.name}
-            className="w-full h-full object-contain"
+            className="w-full h-auto max-h-[55vh] sm:max-h-[550px] object-contain rounded-xl"
           />
         </div>
 

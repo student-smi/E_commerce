@@ -334,12 +334,12 @@ export function AdminProductsPage() {
 
             {/* Product Body */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
-              {/* Image Preview - object-contain prevents cutting/cropping on any screen */}
-              <div className="aspect-square sm:aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-2xs flex items-center justify-center p-3">
+              {/* Image Preview - naturally sized, full image visible without cutting */}
+              <div className="w-full bg-gray-50 rounded-2xl border border-gray-100 p-2 sm:p-4 flex items-center justify-center">
                 <img
                   src={viewProduct.imageUrl || 'https://via.placeholder.com/400x500?text=No+Image'}
                   alt={viewProduct.name}
-                  className="w-full h-full object-contain max-h-64 sm:max-h-full"
+                  className="w-full h-auto max-h-60 sm:max-h-80 object-contain rounded-xl"
                 />
               </div>
 
