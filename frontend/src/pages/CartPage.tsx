@@ -79,7 +79,19 @@ export function CartPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-bold text-gray-900 text-sm sm:text-lg truncate">{item.name}</p>
-                        <span className="text-xs text-gray-400 font-medium">{item.category}</span>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs text-gray-500 font-medium">{item.category}</span>
+                          {item.size && (
+                            <span className="text-xs bg-gray-100 text-gray-800 font-bold px-2.5 py-0.5 rounded-lg border border-gray-200">
+                              Size: {item.size}
+                            </span>
+                          )}
+                          {item.color && (
+                            <span className="text-xs bg-gray-100 text-gray-800 font-bold px-2.5 py-0.5 rounded-lg border border-gray-200">
+                              Color: {item.color}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <button
                         onClick={() => handleRemove(item.productId)}

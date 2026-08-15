@@ -24,6 +24,8 @@ interface OrderItem {
   imageUrl: string;
   quantity: number;
   priceAtPurchase: number;
+  size?: string;
+  color?: string;
 }
 
 interface AdminOrder {
@@ -45,7 +47,7 @@ function OrderItemsRow({ orderId }: { orderId: string }) {
   if (isLoading) return (
     <div className="px-4 py-3 bg-indigo-50/50 flex items-center gap-2 text-xs text-gray-500">
       <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-      Loading item details…
+      Loading item details...
     </div>
   );
 
@@ -59,7 +61,19 @@ function OrderItemsRow({ orderId }: { orderId: string }) {
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-800 truncate max-w-[140px]">{item.name}</p>
-              <p className="text-[10px] text-gray-500">Qty: {item.quantity} · {fmt(item.priceAtPurchase)}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                {item.size && (
+                  <span className="text-[9px] font-bold bg-gray-100 text-gray-700 px-1 py-0.2 rounded">
+                    {item.size}
+                  </span>
+                )}
+                {item.color && (
+                  <span className="text-[9px] font-bold bg-gray-100 text-gray-700 px-1 py-0.2 rounded">
+                    {item.color}
+                  </span>
+                )}
+                <span className="text-[10px] text-gray-400">· x{item.quantity} · {fmt(item.priceAtPurchase)}</span>
+              </div>
             </div>
           </div>
         ))}

@@ -11,9 +11,24 @@ interface ProductForm {
   stock: string;
   category: string;
   imageUrl: string;
+  sizes: string[];
+  colors: string[];
 }
 
-const EMPTY_FORM: ProductForm = { name: '', description: '', price: '', stock: '', category: 'T-Shirts', imageUrl: '' };
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', '28', '30', '32', '34', '36', '38'];
+const ALL_COLORS = ['Black', 'Navy', 'White', 'Gray', 'Charcoal', 'Olive', 'Maroon', 'Beige', 'Red', 'Blue'];
+
+const EMPTY_FORM: ProductForm = {
+  name: '',
+  description: '',
+  price: '',
+  stock: '',
+  category: 'T-Shirts',
+  imageUrl: '',
+  sizes: ['XS', 'S', 'M', 'L', 'XL'],
+  colors: ['Black', 'Navy', 'White'],
+};
+
 const CATEGORIES = ['All', 'T-Shirts', 'Jeans', 'Dresses', 'Jackets', 'Sneakers'];
 const CATEGORY_OPTIONS = ['T-Shirts', 'Jeans', 'Dresses', 'Jackets', 'Sneakers'];
 
@@ -56,9 +71,25 @@ export function AdminProductsPage() {
       stock: String(product.stock),
       category: product.category,
       imageUrl: product.imageUrl,
+      sizes: product.sizes && product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL'],
+      colors: product.colors && product.colors.length > 0 ? product.colors : ['Black', 'Navy', 'White'],
     });
     setError('');
     setModalOpen(true);
+  }
+
+  function toggleSize(sz: string) {
+    setForm((prev) => ({
+      ...prev,
+      sizes: prev.sizes.includes(sz) ? prev.sizes.filter((s) => s !== sz) : [...prev.sizes, sz],
+    }));
+  }
+
+  function toggleColor(col: string) {
+    setForm((prev) => ({
+      ...prev,
+      colors: prev.colors.includes(col) ? prev.colors.filter((c) => c !== col) : [...prev.colors, col],
+    }));
   }
 
   async function handleSave() {
@@ -72,6 +103,8 @@ export function AdminProductsPage() {
         stock: parseInt(form.stock),
         category: form.category,
         imageUrl: form.imageUrl,
+        sizes: form.sizes,
+        colors: form.colors,
       };
       if (editingProduct) {
         await api.put(`/admin/products/${editingProduct.id}`, payload);
@@ -110,7 +143,7 @@ export function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Product Catalog</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage items, stock counts, view details, and edit inventory</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage items, stock counts, size & color variants</p>
         </div>
         <button
           onClick={openCreate}
@@ -339,6 +372,31 @@ export function AdminProductsPage() {
                   </span>
                 </div>
 
+                {/* Available Variants */}
+                <div className="space-y-2 pt-1 border-t border-gray-100 text-xs">
+                  <div>
+                    <span className="text-gray-400 font-bold uppercase tracking-wider block mb-1">Available Sizes:</span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {(viewProduct.sizes || ['XS', 'S', 'M', 'L', 'XL']).map((sz) => (
+                        <span key={sz} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                          {sz}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-gray-400 font-bold uppercase tracking-wider block mb-1">Available Colors:</span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {(viewProduct.colors || ['Black', 'Navy', 'White']).map((c) => (
+                        <span key={c} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-2 border-t border-gray-100">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Description</p>
                   <p className="text-xs sm:text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-xl">
@@ -396,7 +454,7 @@ export function AdminProductsPage() {
       {/* Product Modal (Create/Edit) */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="text-lg font-bold text-gray-900">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
@@ -412,15 +470,15 @@ export function AdminProductsPage() {
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Name</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Product Name</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Classic White Tee"
-                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="e.g. Classic Cotton Tee"
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
@@ -430,20 +488,20 @@ export function AdminProductsPage() {
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Product details..."
-                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Fabric, fit, and details..."
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Price (cents/paisa)</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Price (paisa / cents)</label>
                   <input
                     type="number"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    placeholder="2999"
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    placeholder="2999 (₹29.99)"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                   />
                 </div>
                 <div>
@@ -453,7 +511,7 @@ export function AdminProductsPage() {
                     value={form.stock}
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     placeholder="50"
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                   />
                 </div>
               </div>
@@ -464,7 +522,7 @@ export function AdminProductsPage() {
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white"
                   >
                     {CATEGORY_OPTIONS.map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -478,8 +536,60 @@ export function AdminProductsPage() {
                     value={form.imageUrl}
                     onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
                     placeholder="https://..."
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                   />
+                </div>
+              </div>
+
+              {/* ── Size Variants Picker ── */}
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+                  Available Sizes: <span className="font-normal text-gray-500">(Click to toggle)</span>
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ALL_SIZES.map((sz) => {
+                    const isSelected = form.sizes.includes(sz);
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => toggleSize(sz)}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-black text-white border-black shadow-xs'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {sz} {isSelected && '✓'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── Color Variants Picker ── */}
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+                  Available Colors: <span className="font-normal text-gray-500">(Click to toggle)</span>
+                </label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ALL_COLORS.map((col) => {
+                    const isSelected = form.colors.includes(col);
+                    return (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => toggleColor(col)}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-black text-white border-black shadow-xs'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {col} {isSelected && '✓'}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

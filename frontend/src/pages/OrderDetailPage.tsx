@@ -96,10 +96,22 @@ export function OrderDetailPage() {
               <div className="flex flex-1 justify-between items-center gap-2">
                 <div className="min-w-0">
                   <p className="font-bold text-sm sm:text-base text-gray-900 truncate">{item.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Quantity: {item.quantity}</p>
-                  <p className="text-xs text-gray-400">
-                    {formatPrice(item.priceAtPurchase)} each
-                  </p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs text-gray-500 font-medium">Qty: {item.quantity}</span>
+                    {item.size && (
+                      <span className="text-[11px] font-bold bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md border border-gray-200">
+                        Size: {item.size}
+                      </span>
+                    )}
+                    {item.color && (
+                      <span className="text-[11px] font-bold bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md border border-gray-200">
+                        {item.color}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      ({formatPrice(item.priceAtPurchase)} each)
+                    </span>
+                  </div>
                 </div>
                 <p className="font-extrabold text-sm sm:text-base text-gray-900 text-right shrink-0">
                   {formatPrice(item.priceAtPurchase * item.quantity)}

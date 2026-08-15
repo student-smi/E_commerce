@@ -103,7 +103,19 @@ export function CartDrawer({ open, onClose }: Props) {
                   />
                   <div className="flex flex-col flex-1 min-w-0">
                     <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{item.name}</p>
-                    <p className="text-xs sm:text-sm text-gray-500 mb-2">{formatPrice(item.price)}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 mb-1.5 flex-wrap">
+                      {item.size && (
+                        <span className="text-[10px] bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded-md">
+                          Size: {item.size}
+                        </span>
+                      )}
+                      {item.color && (
+                        <span className="text-[10px] bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded-md">
+                          {item.color}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500 font-medium ml-auto">{formatPrice(item.price)}</span>
+                    </div>
                     <div className="flex items-center gap-2 mt-auto">
                       {/* Quantity Controls */}
                       <div className="flex items-center border border-gray-300 rounded-xl bg-white">

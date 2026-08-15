@@ -8,6 +8,8 @@ export interface CartItem {
   stock: number;
   imageUrl: string;
   category: string;
+  size?: string;
+  color?: string;
 }
 
 interface CartState {
@@ -22,4 +24,4 @@ export const useCartStore = create<CartState>((set) => ({
   items: [],
   setCart: (cartId, items) => set({ cartId, items }),
   clearCart: () => set({ cartId: null, items: [] }),
-}));
+  }));

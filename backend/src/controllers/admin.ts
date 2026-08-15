@@ -115,7 +115,7 @@ export async function getOrderItems(req: Request, res: Response): Promise<void> 
   const items = await db('order_items as oi')
     .join('products as p', 'oi.product_id', 'p.id')
     .where({ 'oi.order_id': req.params.id })
-    .select('p.id', 'p.name', 'p.image_url', 'oi.quantity', 'oi.price_at_purchase');
+    .select('p.id', 'p.name', 'p.image_url', 'oi.quantity', 'oi.price_at_purchase', 'oi.size', 'oi.color');
 
   res.json(items.map((i: any) => ({
     productId: i.id,
@@ -123,6 +123,8 @@ export async function getOrderItems(req: Request, res: Response): Promise<void> 
     imageUrl: i.image_url,
     quantity: i.quantity,
     priceAtPurchase: i.price_at_purchase,
+    size: i.size || 'M',
+    color: i.color || 'Default',
   })));
 }
 

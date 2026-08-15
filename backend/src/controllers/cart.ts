@@ -7,11 +7,15 @@ import db from '../lib/db';
 const AddItemSchema = z.object({
   productId: z.string().min(1),
   quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  size: z.string().optional(),
+  color: z.string().optional(),
 });
 
 const UpdateItemSchema = z.object({
   productId: z.string().min(1),
   quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  size: z.string().optional(),
+  color: z.string().optional(),
 });
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -34,6 +38,8 @@ async function getCartWithItems(userId: string) {
     .select(
       'ci.product_id as productId',
       'ci.quantity',
+      'ci.size',
+      'ci.color',
       'p.name',
       'p.price',
       'p.stock',
@@ -41,7 +47,14 @@ async function getCartWithItems(userId: string) {
       'p.image_url as imageUrl'
     );
 
-  return { cartId: cart.id, items };
+  return {
+    cartId: cart.id,
+    items: items.map((i: any) => ({
+      ...i,
+      size: i.size || 'M',
+      color: i.color || 'Default',
+    })),
+  };
 }
 
 // ── GET /api/cart ─────────────────────────────────────────────
@@ -58,7 +71,7 @@ export async function addToCart(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { productId, quantity } = parsed.data;
+  const { productId, quantity, size = 'M', color = 'Default' } = parsed.data;
   const userId = req.user!.userId;
 
   const product = await db('products').where({ id: productId }).first();
@@ -73,7 +86,9 @@ export async function addToCart(req: Request, res: Response): Promise<void> {
   }
 
   const cartId = await getOrCreateCart(userId);
-  const existing = await db('cart_items').where({ cart_id: cartId, product_id: productId }).first();
+  const existing = await db('cart_items')
+    .where({ cart_id: cartId, product_id: productId })
+    .first();
 
   if (existing) {
     const newQty = existing.quantity + quantity;
@@ -81,13 +96,21 @@ export async function addToCart(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: `Only ${product.stock} units available (${existing.quantity} already in cart)` });
       return;
     }
-    await db('cart_items').where({ cart_id: cartId, product_id: productId }).update({ quantity: newQty });
+    await db('cart_items')
+      .where({ cart_id: cartId, product_id: productId })
+      .update({ quantity: newQty, size, color });
   } else {
     if (quantity > product.stock) {
       res.status(400).json({ error: `Only ${product.stock} units available` });
       return;
     }
-    await db('cart_items').insert({ cart_id: cartId, product_id: productId, quantity });
+    await db('cart_items').insert({
+      cart_id: cartId,
+      product_id: productId,
+      quantity,
+      size,
+      color,
+    });
   }
 
   const result = await getCartWithItems(userId);
@@ -102,7 +125,7 @@ export async function updateCartItem(req: Request, res: Response): Promise<void>
     return;
   }
 
-  const { productId, quantity } = parsed.data;
+  const { productId, quantity, size, color } = parsed.data;
   const userId = req.user!.userId;
 
   const product = await db('products').where({ id: productId }).first();
@@ -122,7 +145,14 @@ export async function updateCartItem(req: Request, res: Response): Promise<void>
     return;
   }
 
-  await db('cart_items').where({ cart_id: cart.id, product_id: productId }).update({ quantity });
+  const updates: Record<string, any> = { quantity };
+  if (size !== undefined) updates.size = size;
+  if (color !== undefined) updates.color = color;
+
+  await db('cart_items')
+    .where({ cart_id: cart.id, product_id: productId })
+    .update(updates);
+
   const result = await getCartWithItems(userId);
   res.json(result);
 }

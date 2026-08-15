@@ -31,11 +31,11 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
   const { cartId, razorpayPaymentId, razorpayOrderId, shippingAddress } = parsed.data;
   const userId = req.user!.userId;
 
-  // Load cart items
+  // Load cart items including size and color
   const items = await db('cart_items as ci')
     .join('products as p', 'ci.product_id', 'p.id')
     .where('ci.cart_id', cartId)
-    .select('ci.product_id', 'ci.quantity', 'p.price', 'p.stock', 'p.name');
+    .select('ci.product_id', 'ci.quantity', 'ci.size', 'ci.color', 'p.price', 'p.stock', 'p.name');
 
   if (!items.length) {
     res.status(400).json({ error: 'Cart is empty' });
@@ -73,7 +73,9 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
           order_id: orderId,
           product_id: item.product_id,
           quantity: item.quantity,
-          price_at_purchase: item.price,  // snapshot — never updated
+          price_at_purchase: item.price,  // snapshot
+          size: item.size || 'M',
+          color: item.color || 'Default',
         });
         await trx('products')
           .where({ id: item.product_id })
@@ -114,7 +116,7 @@ export async function getOrder(req: Request, res: Response): Promise<void> {
   const items = await db('order_items as oi')
     .join('products as p', 'oi.product_id', 'p.id')
     .where('oi.order_id', order.id)
-    .select('oi.product_id', 'oi.quantity', 'oi.price_at_purchase', 'p.name', 'p.image_url');
+    .select('oi.product_id', 'oi.quantity', 'oi.price_at_purchase', 'oi.size', 'oi.color', 'p.name', 'p.image_url');
 
   res.json({
     ...toOrderDTO(order),
@@ -124,6 +126,8 @@ export async function getOrder(req: Request, res: Response): Promise<void> {
       imageUrl: i.image_url,
       quantity: i.quantity,
       priceAtPurchase: i.price_at_purchase,
+      size: i.size || 'M',
+      color: i.color || 'Default',
     })),
   });
 }

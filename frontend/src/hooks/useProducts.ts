@@ -9,6 +9,8 @@ export interface Product {
   stock: number;
   category: string;
   imageUrl: string;
+  sizes?: string[];
+  colors?: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -11,6 +11,8 @@ const CreateProductSchema = z.object({
   stock: z.number().int().min(0, 'Stock must be >= 0'),
   category: z.string().min(1, 'Category is required'),
   imageUrl: z.string().default(''),
+  sizes: z.union([z.array(z.string()), z.string()]).optional(),
+  colors: z.union([z.array(z.string()), z.string()]).optional(),
 });
 
 const UpdateProductSchema = CreateProductSchema.partial();
@@ -65,13 +67,18 @@ export async function createProduct(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { name, description, price, stock, category, imageUrl } = parsed.data;
+  const { name, description, price, stock, category, imageUrl, sizes, colors } = parsed.data;
   const id = uuidv4();
   const now = new Date().toISOString();
+
+  const formattedSizes = Array.isArray(sizes) ? JSON.stringify(sizes) : typeof sizes === 'string' ? sizes : '["XS", "S", "M", "L", "XL"]';
+  const formattedColors = Array.isArray(colors) ? JSON.stringify(colors) : typeof colors === 'string' ? colors : '["Black", "Navy", "White", "Gray"]';
 
   await db('products').insert({
     id, name, description, price, stock, category,
     image_url: imageUrl,
+    sizes: formattedSizes,
+    colors: formattedColors,
     created_at: now,
     updated_at: now,
   });
@@ -94,9 +101,11 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { imageUrl, ...rest } = parsed.data;
+  const { imageUrl, sizes, colors, ...rest } = parsed.data;
   const updates: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
   if (imageUrl !== undefined) updates.image_url = imageUrl;
+  if (sizes !== undefined) updates.sizes = Array.isArray(sizes) ? JSON.stringify(sizes) : sizes;
+  if (colors !== undefined) updates.colors = Array.isArray(colors) ? JSON.stringify(colors) : colors;
 
   await db('products').where({ id: req.params.id }).update(updates);
   const updated = await db('products').where({ id: req.params.id }).first();
@@ -132,7 +141,21 @@ export async function deleteProduct(req: Request, res: Response): Promise<void> 
 }
 
 // ── DTO mapper ────────────────────────────────────────────────
+function parseJSONSafe(val: any, defaultVal: string[]): string[] {
+  if (!val) return defaultVal;
+  if (Array.isArray(val)) return val;
+  try {
+    const parsed = JSON.parse(val);
+    return Array.isArray(parsed) ? parsed : defaultVal;
+  } catch {
+    return typeof val === 'string' ? val.split(',').map((s) => s.trim()) : defaultVal;
+  }
+}
+
 function toProductDTO(p: any) {
+  const defaultSizes = p.category === 'Sneakers' ? ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11'] : p.category === 'Jeans' ? ['28', '30', '32', '34', '36', '38'] : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const defaultColors = ['Black', 'Navy', 'White', 'Charcoal'];
+
   return {
     id: p.id,
     name: p.name,
@@ -141,6 +164,8 @@ function toProductDTO(p: any) {
     stock: p.stock,
     category: p.category,
     imageUrl: p.image_url,
+    sizes: parseJSONSafe(p.sizes, defaultSizes),
+    colors: parseJSONSafe(p.colors, defaultColors),
     createdAt: p.created_at,
     updatedAt: p.updated_at,
   };

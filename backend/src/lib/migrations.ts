@@ -79,6 +79,49 @@ export async function runMigrations(): Promise<void> {
     });
   }
 
+  // ── Column upgrades for variants ──────────────────────────────
+  const hasProductSizes = await db.schema.hasColumn('products', 'sizes');
+  if (!hasProductSizes) {
+    await db.schema.alterTable('products', (t) => {
+      t.text('sizes').defaultTo('["XS", "S", "M", "L", "XL"]');
+    });
+  }
+
+  const hasProductColors = await db.schema.hasColumn('products', 'colors');
+  if (!hasProductColors) {
+    await db.schema.alterTable('products', (t) => {
+      t.text('colors').defaultTo('["Black", "Navy", "White", "Gray"]');
+    });
+  }
+
+  const hasCartSize = await db.schema.hasColumn('cart_items', 'size');
+  if (!hasCartSize) {
+    await db.schema.alterTable('cart_items', (t) => {
+      t.string('size').defaultTo('M');
+    });
+  }
+
+  const hasCartColor = await db.schema.hasColumn('cart_items', 'color');
+  if (!hasCartColor) {
+    await db.schema.alterTable('cart_items', (t) => {
+      t.string('color').defaultTo('Black');
+    });
+  }
+
+  const hasOrderSize = await db.schema.hasColumn('order_items', 'size');
+  if (!hasOrderSize) {
+    await db.schema.alterTable('order_items', (t) => {
+      t.string('size').defaultTo('M');
+    });
+  }
+
+  const hasOrderColor = await db.schema.hasColumn('order_items', 'color');
+  if (!hasOrderColor) {
+    await db.schema.alterTable('order_items', (t) => {
+      t.string('color').defaultTo('Black');
+    });
+  }
+
   // ── Indexes (IF NOT EXISTS — safe to re-run) ──────────────────
   await db.raw(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email         ON users(email)`);
   await db.raw(`CREATE INDEX        IF NOT EXISTS idx_products_category   ON products(category)`);
