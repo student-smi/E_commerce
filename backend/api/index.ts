@@ -11,9 +11,13 @@ let initialized = false;
 
 async function initialize() {
   if (!initialized) {
-    await runMigrations();
-    await seedDatabase();
-    initialized = true;
+    try {
+      await runMigrations();
+      await seedDatabase();
+      initialized = true;
+    } catch (err) {
+      console.error('Failed to initialize database on Vercel:', err);
+    }
   }
 }
 

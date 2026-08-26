@@ -17,7 +17,7 @@ const db = knex({
     connectionString,
     ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
   },
-  pool: { min: 2, max: 10 },
+  pool: { min: 0, max: 10 },
 });
 
 export default db;
