@@ -17,6 +17,24 @@ const sampleProducts = [
 ];
 
 export async function seedDatabase(): Promise<void> {
+  // Seed Default Admin User
+  const adminEmail = 'admin@ecommerce.com';
+  const existingAdmin = await db('users').where({ email: adminEmail }).first();
+  if (!existingAdmin) {
+    const bcrypt = require('bcryptjs');
+    const passwordHash = await bcrypt.hash('admin12345', 12);
+    await db('users').insert({
+      id: uuidv4(),
+      name: 'Super Admin',
+      email: adminEmail,
+      password_hash: passwordHash,
+      role: 'admin',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    console.log('Seed complete: inserted default admin user.');
+  }
+
   for (const product of sampleProducts) {
     const existing = await db('products').where({ name: product.name }).first();
     if (!existing) {
